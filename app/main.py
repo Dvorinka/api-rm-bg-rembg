@@ -123,3 +123,8 @@ def remove_base64(
             "output_base64": base64.b64encode(result_png).decode("ascii"),
         }
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=30019)
