@@ -2,10 +2,14 @@
 nixPkgs = ["python3", "gcc"]
 nixLibs = ["zlib", "stdenv.cc.cc.lib"]
 aptPkgs = ["curl", "wget"]
+
+[phases.install]
+cmds = ["python -m venv --copies /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
+cacheDirectories = ["/root/.cache/pip"]
 paths = ["/opt/venv/bin"]
 
 [phases.build]
-cmds = ["python -m venv --copies /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
+cmds = []
 cacheDirectories = ["/root/.cache/pip"]
 
 [phases.start]
