@@ -11,7 +11,4 @@ cacheDirectories = ["/root/.cache/pip"]
 cmds = []
 
 [phases.start]
-cmd = "./start.sh"
-
-[startup]
-cmd = "./start.sh"
+cmd = "cd /app && source /opt/venv/bin/activate && python app/main.py"
