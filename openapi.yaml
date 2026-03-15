@@ -1,0 +1,214 @@
+openapi: 3.0.3
+info:
+  title: Background Removal API
+  description: API for removing backgrounds from images using rembg library
+  version: 1.0.0
+  contact:
+    name: API Services
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8091
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /v1/rmbg/remove:
+    post:
+      summary: Remove background from uploaded file
+      description: Upload an image file and return the image with background removed
+      tags:
+        - Background Removal
+      security:
+        - ApiKeyAuth: []
+        - XApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file to process
+      responses:
+        '200':
+          description: Successful background removal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RemoveResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/rmbg/remove/base64:
+    post:
+      summary: Remove background from base64 image
+      description: Process a base64 encoded image and return the image with background removed
+      tags:
+        - Background Removal
+      security:
+        - ApiKeyAuth: []
+        - XApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Base64Input'
+      responses:
+        '200':
+          description: Successful background removal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RemoveResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Health status
+          enum: [ok, degraded]
+          example: "ok"
+        warning:
+          type: string
+          description: Warning message if service is degraded
+          example: "rembg import failed"
+        detail:
+          type: string
+          description: Detailed error information if service is degraded
+          example: "Failed to import rembg library"
+
+    Base64Input:
+      type: object
+      required:
+        - file_base64
+      properties:
+        file_base64:
+          type: string
+          description: Base64 encoded image data
+          example: "iVBORw0KGgoAAAANSUhEUgAA..."
+
+    RemoveResponse:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: Original filename
+          example: "input.png"
+        output_filename:
+          type: string
+          description: Generated output filename
+          example: "output.png"
+        output_mime:
+          type: string
+          description: MIME type of output
+          example: "image/png"
+        size_bytes:
+          type: integer
+          description: Size of output file in bytes
+          example: 47231
+        processing_ms:
+          type: integer
+          description: Processing time in milliseconds
+          example: 298
+        output_base64:
+          type: string
+          description: Base64 encoded output image
+          example: "iVBORw0KGgoAAAANSUhEUgAA..."
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "file is empty"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication (format: "Bearer YOUR_API_KEY")
+    XApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (format: "YOUR_API_KEY")
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Background Removal
+    description: Background removal functionality
