@@ -1,4 +1,4 @@
-module rm-bg-rembg
+module apiservices/rm-bg-rembg
 
 go 1.25.7
 
