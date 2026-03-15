@@ -6,9 +6,12 @@ aptPkgs = ["curl", "wget"]
 [phases.install]
 cmds = ["python -m venv --copies /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
 cacheDirectories = ["/root/.cache/pip"]
+paths = ["/opt/venv/bin"]
 
 [phases.build]
 cmds = []
+cacheDirectories = ["/root/.cache/pip"]
 
 [phases.start]
 cmd = "cd /app && source /opt/venv/bin/activate && python app/main.py"
+paths = ["/opt/venv/bin"]
