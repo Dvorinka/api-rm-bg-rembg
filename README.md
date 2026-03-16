@@ -4,11 +4,11 @@ Part of the API Services Collection - A comprehensive set of specialized APIs fo
 
 **Architecture**: Go web server with Python microservice for ML processing
 
-## � Docker-First Deployment
+## 🐳 Docker Compose Deployment
 
-This project is designed to run primarily with Docker Compose for consistency across environments.
+This project runs exclusively with Docker Compose on port **30019**.
 
-## �🚀 Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose installed
@@ -27,23 +27,20 @@ cp .env.example .env
 vim .env
 
 # Build and start all services
-make docker-up
+make up
 
 # Or directly with docker-compose
 docker compose up -d
 ```
 
-### Production (RapidAPI)
+### Production
 ```bash
 # Set production environment
 export ENVIRONMENT=production
 export RAPIDAPI_PROXY_SECRET=your-secret-here
 
 # Deploy to production
-make deploy
-
-# Deploy to Coolify
-# Use the coolify.yaml configuration
+make up
 ```
 
 ## 📋 API Documentation
@@ -74,15 +71,15 @@ curl -H "X-RapidAPI-Proxy-Secret: your-secret" \
 2. Proxy secret validation (prevents bypass attacks)
 3. Service API key validation
 
-## 🐳 Docker Deployment
+## 🐳 Docker Compose Commands
 
-### Primary Method: Docker Compose
+### Primary Commands
 ```bash
 # Build and start all services
-make docker-up
+make up
 
 # View logs
-make docker-logs
+make logs
 
 # Check service status
 make status
@@ -91,53 +88,29 @@ make status
 make health
 
 # Test API
-make test-api
+make test
 
 # Stop services
-make docker-down
+make down
 
 # Rebuild and restart
-make docker-rebuild
+make rebuild
 
 # Clean Docker resources
-make docker-clean
+make clean
 ```
 
-### Individual Docker Commands
-```bash
-# Build images
-make docker-build
+## 🌍 Environment Variables
 
-# Production deployment
-ENVIRONMENT=production docker compose up -d --build
-```
+### Required
+- `PORT` - Server port (default: 30019)
+- `RMBG_API_KEY` - API authentication key
+- `PYTHON_SERVICE_HOST` - Python service host (default: python-service)
+- `PYTHON_SERVICE_PORT` - Python service port (default: 30020)
 
-## ☁️ Coolify Deployment
-
-### Automatic Deployment
-The `coolify.yaml` configuration includes:
-- Docker image building
-- Health checks
-- Resource limits
-- Environment variables
-- Monitoring setup
-
-### Manual Coolify Setup
-1. Create Application → Docker → Git Repository
-2. Repository: `your-username/api-rm-bg-rembg`
-3. Configure environment variables
-4. Set health check path: `/healthz`
-
-## 📊 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | 30019 |
-| `ENVIRONMENT` | development/production | development |
-| `RMBG_API_KEY` | Service API key | dev-rmbg-key |
-| `PYTHON_SERVICE_HOST` | Python service host | localhost |
-| `PYTHON_SERVICE_PORT` | Python service port | 30020 |
-| `RAPIDAPI_PROXY_SECRET` | RapidAPI proxy secret | - |
+### Optional
+- `ENVIRONMENT` - Environment mode (development/production)
+- `RAPIDAPI_PROXY_SECRET` - RapidAPI proxy secret for production
 
 ## 🔧 Configuration
 
@@ -147,7 +120,7 @@ The `coolify.yaml` configuration includes:
 PORT=30019
 ENVIRONMENT=development
 RMBG_API_KEY=dev-rmbg-key
-PYTHON_SERVICE_HOST=localhost
+PYTHON_SERVICE_HOST=python-service
 PYTHON_SERVICE_PORT=30020
 ```
 
@@ -209,13 +182,13 @@ curl http://localhost:8080/metrics
    curl -H "Authorization: Bearer dev-rmbg-key" http://localhost:30019/healthz
    ```
 
-3. **Service Communication Issues**
+3. **Service Issues**
    ```bash
    # Check service status
    make status
    
    # View logs
-   make docker-logs
+   make logs
    
    # Health check
    make health
@@ -224,10 +197,10 @@ curl http://localhost:8080/metrics
 4. **Docker Build Issues**
    ```bash
    # Clean rebuild
-   make docker-rebuild
+   make rebuild
    
    # Clean all Docker resources
-   make docker-clean
+   make clean
    ```
 
 5. **Environment Issues**
@@ -269,21 +242,21 @@ curl -X POST \
 
 ### Development Setup
 ```bash
-# Quick start (Docker Compose)
-make docker-up
+# Quick start
+make up
 
 # View available commands
 make help
 
 # Monitor services
-docker compose ps
-make docker-logs
+make status
+make logs
 
 # Test the API
-make test-api
+make test
 
-# Development with hot reload (requires local setup)
-# Note: Not recommended - use Docker Compose for consistency
+# Health check
+make health
 ```
 
 ### Code Structure
@@ -298,9 +271,8 @@ rm-bg-rembg/
 ├── Dockerfile.go           # Go server Docker image
 ├── Dockerfile.python       # Python service Docker image
 ├── docker-compose.yml      # Multi-service deployment
-├── coolify.yaml           # Production deployment
 ├── go.mod                 # Go dependencies
-├── Makefile               # Build automation
+├── Makefile               # Docker Compose commands
 ├── .env.example           # Environment variables template
 └── README.md              # This file
 ```
