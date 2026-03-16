@@ -65,13 +65,15 @@ func main() {
 
 	r := gin.Default()
 
-	// Middleware
+	// Health check endpoint (no auth required)
+	r.GET("/healthz", healthCheck(pythonService))
+
+	// Middleware for protected routes
 	r.Use(authMiddleware(apiKey))
 	r.Use(corsMiddleware())
 	r.Use(loggingMiddleware())
 
-	// Routes
-	r.GET("/healthz", healthCheck(pythonService))
+	// Protected Routes
 	r.POST("/v1/rmbg/remove", handleFileUpload(pythonService))
 	r.POST("/v1/rmbg/remove/base64", handleBase64(pythonService))
 

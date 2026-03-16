@@ -17,7 +17,7 @@ services:
       python-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--header=X-API-Key: dev-rmbg-key", "--no-verbose", "--tries=1", "--spider", "http://localhost:30019/healthz"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:30019/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
