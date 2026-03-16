@@ -2,7 +2,7 @@ services:
   go-server:
     build:
       context: .
-      dockerfile: Dockerfile.go
+      dockerfile: Dockerfile
     ports:
       - "30019:30019"
     environment:
