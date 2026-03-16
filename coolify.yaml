@@ -1,0 +1,69 @@
+# Coolify Deployment Configuration
+# RmBgRembg API Service - Go Server with Python Backend
+
+services:
+  - name: go-server
+    type: docker
+    image: rm-bg-rembg-go:latest
+    ports:
+      - "30019:30019"
+    environment:
+      - PORT=30019
+      - ENVIRONMENT=production
+      - RMBG_API_KEY={{RMBG_API_KEY}}
+      - PYTHON_SERVICE_HOST=python-service
+      - PYTHON_SERVICE_PORT=30020
+      - RAPIDAPI_PROXY_SECRET={{RAPIDAPI_PROXY_SECRET}}
+    health_check:
+      path: /healthz
+      interval: 30
+      timeout: 10
+      retries: 3
+    resources:
+      memory: 256Mi
+      cpu: 500m
+    restart_policy: unless-stopped
+    networks:
+      - api-network
+    depends_on:
+      - python-service
+
+  - name: python-service
+    type: docker
+    image: rm-bg-rembg-python:latest
+    ports:
+      - "30020:30020"
+    environment:
+      - PORT=30020
+    health_check:
+      path: /healthz
+      interval: 30
+      timeout: 10
+      retries: 3
+    resources:
+      memory: 512Mi
+      cpu: 1000m
+    restart_policy: unless-stopped
+    networks:
+      - api-network
+
+# Network Configuration
+networks:
+  api-network:
+    driver: bridge
+
+# Deployment Settings
+deployment:
+  replicas: 1
+  strategy: rolling
+  rollback_on_failure: true
+
+# Monitoring
+monitoring:
+  metrics:
+    enabled: true
+    path: /metrics
+  logging:
+    driver: json-file
+    max_size: 10m
+    max_files: 3

@@ -2,7 +2,17 @@
 
 Part of the API Services Collection - A comprehensive set of specialized APIs for modern applications.
 
-## 🚀 Quick Start
+**Architecture**: Go web server with Python microservice for ML processing
+
+## � Docker-First Deployment
+
+This project is designed to run primarily with Docker Compose for consistency across environments.
+
+## �🚀 Quick Start
+
+### Prerequisites
+- Docker and Docker Compose installed
+- Port 30019 available
 
 ### Development
 ```bash
@@ -13,15 +23,14 @@ cd api-rm-bg-rembg
 # Copy environment file
 cp .env.example .env
 
-# Edit .env with your API keys
+# Edit .env with your API keys (optional for development)
 vim .env
 
-# Run with Docker Compose
-docker-compose up -d
+# Build and start all services
+make docker-up
 
-# Or run locally
-go mod download
-go run cmd/rm/main.go
+# Or directly with docker-compose
+docker compose up -d
 ```
 
 ### Production (RapidAPI)
@@ -30,23 +39,26 @@ go run cmd/rm/main.go
 export ENVIRONMENT=production
 export RAPIDAPI_PROXY_SECRET=your-secret-here
 
+# Deploy to production
+make deploy
+
 # Deploy to Coolify
 # Use the coolify.yaml configuration
 ```
 
 ## 📋 API Documentation
 
-- **Local**: http://localhost:8080/docs
-- **Health Check**: http://localhost:8080/healthz
-- **Base URL**: http://localhost:8080/v1/rm/
+- **Local**: http://localhost:30019/healthz
+- **Health Check**: http://localhost:30019/healthz
+- **Base URL**: http://localhost:30019/v1/rmbg/
 
 ## 🔐 Authentication
 
 ### Development Mode
 Use Bearer token authentication:
 ```bash
-curl -H "Authorization: Bearer dev-rm-key" \
-     http://localhost:8080/v1/rm/endpoint
+curl -H "Authorization: Bearer dev-rmbg-key" \
+     http://localhost:30019/v1/rmbg/remove
 ```
 
 ### Production Mode (RapidAPI)
@@ -54,7 +66,7 @@ Requests must include both headers:
 ```bash
 curl -H "X-RapidAPI-Proxy-Secret: your-secret" \
      -H "Authorization: Bearer your-api-key" \
-     https://your-api.p.rapidapi.com/v1/rm/endpoint
+     https://your-api.p.rapidapi.com/v1/rmbg/remove
 ```
 
 **Security Layers:**
@@ -64,21 +76,40 @@ curl -H "X-RapidAPI-Proxy-Secret: your-secret" \
 
 ## 🐳 Docker Deployment
 
-### Build and Run
+### Primary Method: Docker Compose
 ```bash
-# Build image
-docker build -t api-rm-bg-rembg .
+# Build and start all services
+make docker-up
 
-# Run container
-docker run -p 8080:8080 \
-  -e RM_BG_REMBG_API_KEY=your-key \
-  -e ENVIRONMENT=development \
-  api-rm-bg-rembg
+# View logs
+make docker-logs
+
+# Check service status
+make status
+
+# Health check
+make health
+
+# Test API
+make test-api
+
+# Stop services
+make docker-down
+
+# Rebuild and restart
+make docker-rebuild
+
+# Clean Docker resources
+make docker-clean
 ```
 
-### Docker Compose
+### Individual Docker Commands
 ```bash
-docker-compose up -d
+# Build images
+make docker-build
+
+# Production deployment
+ENVIRONMENT=production docker compose up -d --build
 ```
 
 ## ☁️ Coolify Deployment
@@ -101,9 +132,11 @@ The `coolify.yaml` configuration includes:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | Server port | 8080 |
+| `PORT` | Server port | 30019 |
 | `ENVIRONMENT` | development/production | development |
-| `RM_BG_REMBG_API_KEY` | Service API key | dev-rm-key |
+| `RMBG_API_KEY` | Service API key | dev-rmbg-key |
+| `PYTHON_SERVICE_HOST` | Python service host | localhost |
+| `PYTHON_SERVICE_PORT` | Python service port | 30020 |
 | `RAPIDAPI_PROXY_SECRET` | RapidAPI proxy secret | - |
 
 ## 🔧 Configuration
@@ -111,17 +144,21 @@ The `coolify.yaml` configuration includes:
 ### Development Settings
 ```bash
 # .env file
-PORT=8080
+PORT=30019
 ENVIRONMENT=development
-RM_BG_REMBG_API_KEY=your-development-key
+RMBG_API_KEY=dev-rmbg-key
+PYTHON_SERVICE_HOST=localhost
+PYTHON_SERVICE_PORT=30020
 ```
 
 ### Production Settings
 ```bash
 # .env file
-PORT=8080
+PORT=30019
 ENVIRONMENT=production
-RM_BG_REMBG_API_KEY=your-production-api-key
+RMBG_API_KEY=your-production-api-key
+PYTHON_SERVICE_HOST=python-service
+PYTHON_SERVICE_PORT=30020
 RAPIDAPI_PROXY_SECRET=your-rapidapi-secret
 ```
 
@@ -157,71 +194,115 @@ curl http://localhost:8080/metrics
 
 ### Common Issues
 
-1. **Authentication Failures**
+1. **Port Already in Use**
+   ```bash
+   # Kill processes using port 30019
+   lsof -ti:30019 | xargs kill -9
+   
+   # Restart services
+   make docker-up
+   ```
+
+2. **Authentication Failures**
    ```bash
    # Check API key
-   curl -H "Authorization: Bearer your-key" http://localhost:8080/healthz
-   
-   # Check proxy secret in production
-   curl -H "X-RapidAPI-Proxy-Secret: your-secret" \
-        -H "Authorization: Bearer your-key" \
-        http://localhost:8080/healthz
+   curl -H "Authorization: Bearer dev-rmbg-key" http://localhost:30019/healthz
    ```
 
-2. **Docker Build Issues**
+3. **Service Communication Issues**
    ```bash
-   # Clean build
-   docker system prune -f
-   docker build --no-cache -t api-rm-bg-rembg .
+   # Check service status
+   make status
+   
+   # View logs
+   make docker-logs
+   
+   # Health check
+   make health
    ```
 
-3. **Environment Issues**
+4. **Docker Build Issues**
+   ```bash
+   # Clean rebuild
+   make docker-rebuild
+   
+   # Clean all Docker resources
+   make docker-clean
+   ```
+
+5. **Environment Issues**
    ```bash
    # Check environment variables
-   docker-compose logs rm-bg-rembg-api
+   docker compose logs go-server
+   docker compose logs python-service
    ```
 
 ## 📚 API Endpoints
 
 ### Base URL
 ```
-http://localhost:8080/v1/rm/
+http://localhost:30019/v1/rmbg/
 ```
 
 ### Common Endpoints
 - `GET /healthz` - Health check
-- `GET /docs` - API documentation (if available)
-- Service-specific endpoints - See API docs
+- `POST /v1/rmbg/remove` - Remove background from uploaded file
+- `POST /v1/rmbg/remove/base64` - Remove background from base64 image
+
+### Example Usage
+```bash
+# Upload file
+curl -X POST \
+  -H "Authorization: Bearer dev-rmbg-key" \
+  -F "file=@image.jpg" \
+  http://localhost:30019/v1/rmbg/remove
+
+# Base64 input
+curl -X POST \
+  -H "Authorization: Bearer dev-rmbg-key" \
+  -H "Content-Type: application/json" \
+  -d '{"file_base64":"iVBORw0KGgoAAAANSUhEUgAA..."}' \
+  http://localhost:30019/v1/rmbg/remove/base64
+```
 
 ## 🛠️ Development
 
-### Local Development Setup
+### Development Setup
 ```bash
-# Install dependencies
-go mod download
+# Quick start (Docker Compose)
+make docker-up
 
-# Run tests
-go test ./...
+# View available commands
+make help
 
-# Run with hot reload (using air)
-air cmd/rm/main.go
+# Monitor services
+docker compose ps
+make docker-logs
+
+# Test the API
+make test-api
+
+# Development with hot reload (requires local setup)
+# Note: Not recommended - use Docker Compose for consistency
 ```
 
 ### Code Structure
 ```
 rm-bg-rembg/
 ├── cmd/
-│   └── rm/
-│       └── main.go          # Application entry point
-├── internal/
-│   └── rm/
-│       ├── auth/            # Authentication middleware
-│       ├── api/             # HTTP handlers
-│       └── service/         # Business logic
-├── Dockerfile               # Docker configuration
-├── docker-compose.yml       # Local development
-├── coolify.yaml            # Production deployment
-└── README.md               # This file
+│   └── server/
+│       └── main.go         # Go web server entry point
+├── python_service/
+│   ├── main.py             # Python ML service
+│   └── requirements.txt    # Python dependencies
+├── Dockerfile.go           # Go server Docker image
+├── Dockerfile.python       # Python service Docker image
+├── docker-compose.yml      # Multi-service deployment
+├── coolify.yaml           # Production deployment
+├── go.mod                 # Go dependencies
+├── Makefile               # Build automation
+├── .env.example           # Environment variables template
+└── README.md              # This file
 ```
 
 ## 🤝 Contributing

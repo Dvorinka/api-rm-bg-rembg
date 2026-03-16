@@ -1,13 +1,46 @@
-version: '3.8'
-
 services:
-  rm-bg-rembg-api:
-    build: .
+  go-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.go
     ports:
       - "30019:30019"
     environment:
       - PORT=30019
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - RMBG_API_KEY=${RMBG_API_KEY:-dev-rmbg-key}
+      - PYTHON_SERVICE_HOST=python-service
+      - PYTHON_SERVICE_PORT=30020
       - RAPIDAPI_PROXY_SECRET=${RAPIDAPI_PROXY_SECRET:-}
     restart: unless-stopped
+    depends_on:
+      python-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:30019/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - app-network
+
+  python-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    environment:
+      - PORT=30020
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:30020/healthz')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

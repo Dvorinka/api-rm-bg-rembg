@@ -1,0 +1,40 @@
+# Python service Dockerfile
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Copy requirements
+COPY python_service/requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Final stage
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y wget curl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the installed packages from builder stage
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy source code
+COPY python_service/ .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 30020
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:30020/healthz')" || exit 1
+
+# Run the application
+CMD ["python", "main.py"]
