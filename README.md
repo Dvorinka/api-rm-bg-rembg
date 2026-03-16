@@ -27,9 +27,9 @@ cp .env.example .env
 vim .env
 
 # Build and start all services
-make up
+docker compose up -d --build
 
-# Or directly with docker-compose
+# Or just start if already built
 docker compose up -d
 ```
 
@@ -40,7 +40,7 @@ export ENVIRONMENT=production
 export RAPIDAPI_PROXY_SECRET=your-secret-here
 
 # Deploy to production
-make up
+docker compose up -d --build
 ```
 
 ## 📋 API Documentation
@@ -76,28 +76,26 @@ curl -H "X-RapidAPI-Proxy-Secret: your-secret" \
 ### Primary Commands
 ```bash
 # Build and start all services
-make up
+docker compose up -d --build
 
 # View logs
-make logs
+docker compose logs -f
 
 # Check service status
-make status
-
-# Health check
-make health
-
-# Test API
-make test
+docker compose ps
 
 # Stop services
-make down
+docker compose down
 
 # Rebuild and restart
-make rebuild
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 
 # Clean Docker resources
-make clean
+docker compose down -v
+docker system prune -f
+docker image prune -f
 ```
 
 ## 🌍 Environment Variables
@@ -185,22 +183,25 @@ curl http://localhost:8080/metrics
 3. **Service Issues**
    ```bash
    # Check service status
-   make status
+   docker compose ps
    
    # View logs
-   make logs
+   docker compose logs -f
    
    # Health check
-   make health
+   curl -s -H "Authorization: Bearer dev-rmbg-key" http://localhost:30019/healthz | jq .
    ```
 
 4. **Docker Build Issues**
    ```bash
    # Clean rebuild
-   make rebuild
+   docker compose down
+   docker compose build --no-cache
+   docker compose up -d
    
    # Clean all Docker resources
-   make clean
+   docker compose down -v
+   docker system prune -f
    ```
 
 5. **Environment Issues**
@@ -243,20 +244,17 @@ curl -X POST \
 ### Development Setup
 ```bash
 # Quick start
-make up
-
-# View available commands
-make help
+docker compose up -d --build
 
 # Monitor services
-make status
-make logs
+docker compose ps
+docker compose logs -f
 
 # Test the API
-make test
+curl -s -H "Authorization: Bearer dev-rmbg-key" -H "Content-Type: application/json" -d '{"file_base64":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="}' http://localhost:30019/v1/rmbg/remove/base64 | jq .
 
 # Health check
-make health
+curl -s -H "Authorization: Bearer dev-rmbg-key" http://localhost:30019/healthz | jq .
 ```
 
 ### Code Structure
@@ -272,7 +270,6 @@ rm-bg-rembg/
 ├── Dockerfile.python       # Python service Docker image
 ├── docker-compose.yml      # Multi-service deployment
 ├── go.mod                 # Go dependencies
-├── Makefile               # Docker Compose commands
 ├── .env.example           # Environment variables template
 └── README.md              # This file
 ```
